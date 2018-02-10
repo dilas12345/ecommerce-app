@@ -305,7 +305,7 @@
         .module('main')
         .controller('CartCtrl', CartCtrl);
 
-    function CartCtrl(CartService, WatchService, $cookies, Notification, STRIPE_KEY, $log, $state, StripeCheckout) {
+    function CartCtrl(CartService, WatchService, $cookies, $http, Notification, STRIPE_KEY, $log, $state, StripeCheckout) {
         var vm = this;
 
         vm.addToCart = addToCart;
@@ -338,11 +338,17 @@
                 handler.open({
                     name: 'Ecommerce App',
                     description: vm.watches.length + ' watches',
-                    zipCode: true,
                     amount: vm.totalPrice * 100
                 }).then(function(result) {
                     console.log("Order complete!");
-                    completeOrder(order);
+                    $http.post('/charge', {
+                        stripeToken: result[0].id,
+                        description: vm.watches.length + ' watches',
+                        amount: vm.totalPrice * 100,
+                        order: order
+                    }).then(function () {
+                        completeOrder(order);
+                    });
                 },function() {
                     console.log("Stripe Checkout closed without making a sale :(");
                 });
@@ -611,12 +617,11 @@
         });  
 })();  
 angular.module("config", [])
-.constant("BUCKET_SLUG", "ecommerce-app")
-.constant("MEDIA_URL", "https://api.cosmicjs.com/v1/ecommerce-app/media")
+.constant("MEDIA_URL", "https://api.cosmicjs.com/v1/undefined/media")
 .constant("URL", "https://api.cosmicjs.com/v1/")
 .constant("READ_KEY", "")
 .constant("WRITE_KEY", "")
-.constant("STRIPE_KEY", "pk_test_oRv6WcnATRyMqponKKG6QlON");
+.constant("STRIPE_KEY", "");
 
 (function () {
     'use strict';
